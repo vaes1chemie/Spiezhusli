@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hüsli</title>
+<meta name="theme-color" content="#2E5D4F">
+<style>
+  :root{
+    --ink:#1C2B2D; --pine:#2E5D4F; --lake:#3B6E9C; --sun:#D9A227;
+    --rust:#9E4B45; --snow:#F8F6F1; --stone:#E7E2D7; --line:#CFC9BC; --mute:#6B7770;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--snow);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+  .serif{font-family:ui-serif,Georgia,"Times New Roman",serif}
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+    padding-bottom:14px;border-bottom:2px solid var(--ink)}
+  .brand{font-family:ui-serif,Georgia,serif;font-size:30px;line-height:1;letter-spacing:-.01em}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-top:6px}
+  .label{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);font-weight:700}
+  nav.tabs{display:flex;flex-wrap:wrap;gap:2px;margin:16px 0 22px}
+  nav.tabs button{background:none;border:none;border-bottom:3px solid transparent;padding:8px 12px;
+    font-size:14px;color:var(--mute);cursor:pointer;font-family:inherit}
+  nav.tabs button.on{border-bottom-color:var(--pine);color:var(--ink);font-weight:700}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card+.card{margin-top:14px}
+  .grid{display:grid;gap:14px}
+  .cols2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+  @media(max-width:620px){.cols2{grid-template-columns:1fr}}
+  input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+    font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  input[type=time]{width:118px}
+  textarea{resize:vertical}
+  .btn{border-radius:10px;font-weight:600;padding:10px 18px;font-size:14px;border:1px solid transparent;
+    background:var(--pine);color:#fff;cursor:pointer;font-family:inherit}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+  .btn.warn{background:#fff;color:var(--rust);border-color:var(--rust)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid currentColor}
+  .who{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:#fff;cursor:pointer;font-family:inherit;color:var(--ink)}
+  /* Kalender */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal .wd{font-size:11px;letter-spacing:.1em;color:var(--mute);text-align:center;font-weight:700;padding-bottom:2px}
+  .day{position:relative;background:#fff;border:1px solid var(--line);border-radius:8px;min-height:62px;
+    padding:6px 5px;text-align:left;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .day.busy{background:#EDF2EE}
+  .day.sel{border-color:var(--ink);border-width:2px}
+  .day .n{font-size:13px}
+  .day.today .n{color:var(--lake);font-weight:800}
+  .day .full{position:absolute;right:5px;top:5px;font-size:10px;color:var(--rust);font-weight:700}
+  .beds{position:absolute;left:5px;bottom:6px;display:flex;gap:2px}
+  .beds i{width:4px;height:4px;border-radius:1px;background:var(--stone);display:block}
+  .beds i.u{background:var(--pine)} .beds i.p{background:var(--sun)}
+  .res{border:1px solid var(--line);border-left:4px solid var(--pine);border-radius:10px;padding:10px 12px;background:#fff}
+  .res.angefragt{border-left-color:var(--sun)} .res.abgelehnt{border-left-color:var(--rust)}
+  .sub{font-size:13px;color:var(--mute)}
+  .warn{color:var(--rust);font-size:13px}
+  .bedrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  article.log{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  article.log img{width:100%;max-height:360px;object-fit:cover;display:block}
+  article.log .body{padding:16px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:999px;font-size:14px;z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+  .center{min-height:70vh;display:flex;align-items:center;justify-content:center}
+  .pick{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px;font-size:16px;cursor:pointer;margin-bottom:8px;font-family:inherit;color:var(--ink)}
+  footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+  :focus-visible{outline:2px solid var(--lake);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ================================================================
+   1. EINSTELLUNG — hier die Adresse der Google-Web-App einfügen
+   ================================================================ */
+const API_URL = "https://script.google.com/macros/s/AKfycbyLc4YdUOUbVg6oAZVVs2DOFJrBp-QW0UaHC-Lii23xXQ8u8r2MKWMpXUIN3OI3LfQ7/exec";
+
+/* ================================================================ */
+
+const PEOPLE = ["Marlys", "Bálint", "Béla", "Katalin"];
+const OWNER  = "Marlys";
+const BEDS = [
+  { id:"unten",  label:"Unten, Schlafzimmer",        max:2 },
+  { id:"obenSZ", label:"Oben, Schlafzimmer",         max:2 },
+  { id:"obenKZ", label:"Oben, Kinderzimmer",         max:2 },
+  { id:"couch",  label:"Oben, Couch im Wohnzimmer",  max:2 },
+];
+const TOTAL = BEDS.reduce((s,b)=>s+b.max,0);
+const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const WD = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+/* ---------- Hilfen ---------- */
+const $ = (s)=>document.querySelector(s);
+const esc = (s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = (n)=>String(n).padStart(2,"0");
+const iso = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromIso = (s)=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const today = ()=>iso(new Date());
+const addDays=(s,n)=>{const d=fromIso(s);d.setDate(d.getDate()+n);return iso(d)};
+const fmt=(s)=>{if(!s)return"";const d=fromIso(s);return `${WD[(d.getDay()+6)%7]}, ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`};
+const fmtS=(s)=>{const d=fromIso(s);return `${d.getDate()}.${d.getMonth()+1}.`};
+const overlaps=(a,b)=>a.from<=b.to&&b.from<=a.to;
+const bedSum=(o)=>BEDS.reduce((s,b)=>s+(Number(o&&o[b.id])||0),0);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+
+/* ---------- Zustand ---------- */
+const S = {
+  me: localStorage.getItem("huesli.me") || null,
+  code: localStorage.getItem("huesli.code") || null,
+  tab: "kalender",
+  loading: true,
+  error: null,
+  res: [], todos: [], logs: [],
+  cal: { y: new Date().getFullYear(), m: new Date().getMonth(), sel: today() },
+  form: null,
+  todoText: "",
+  log: { date: today(), title:"", text:"", photo:null },
+  sent: null,
+  filter: "offen",
+};
+function freshForm(){
+  return { from: today(), fromTime:"17:00", to: addDays(today(),2), toTime:"11:00",
+    guests:[S.me||""], beds:{unten:0,obenSZ:0,obenKZ:0,couch:0}, exclusive:false, note:"" };
+}
+
+/* ---------- Verbindung zur Google-Tabelle ---------- */
+async function call(action, payload){
+  if(API_URL.indexOf("HIER_DIE") === 0) throw new Error("Die Web-App-Adresse fehlt noch in index.html.");
+  const r = await fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({ action, payload: payload||{}, code: S.code })
+  });
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || "Unbekannter Fehler");
+  return j.data;
+}
+async function refresh(){
+  const d = await call("all");
+  S.res = d.reservations; S.todos = d.todos; S.logs = d.logs;
+}
+function toast(msg){
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 2600);
+}
+async function guard(fn, msg){
+  try{ await fn(); if(msg) toast(msg); }
+  catch(e){ toast("Ging nicht: "+e.message); }
+  render();
+}
+
+/* ---------- Start ---------- */
+(async function init(){
+  if(S.me && S.code){
+    try{ await refresh(); S.loading=false; }
+    catch(e){ S.loading=false; S.error=e.message; }
+  } else { S.loading=false; }
+  render();
+})();
+
+/* ================================================================
+   Darstellung
+   ================================================================ */
+function render(){
+  const app = $("#app");
+  if(S.loading){ app.innerHTML = `<div class="center sub">Hüsli wird aufgeschlossen …</div>`; return; }
+  if(!S.me || !S.code){ app.innerHTML = viewLogin(); return; }
+
+  const offen = S.res.filter(r=>r.status==="angefragt").length;
+  app.innerHTML = `
+    <header class="top">
+      <div>
+        <div class="brand">Hüsli</div>
+        <div class="eyebrow">Reservieren · Aufgaben · Hüsli-Buch</div>
+      </div>
+      <button class="who" data-act="logout">${esc(S.me)}${S.me===OWNER?" · Besitzerin":""} ↔</button>
+    </header>
+    <nav class="tabs">
+      ${[["kalender","Kalender"],["neu","Reservieren"],["anfragen","Anfragen"+(offen?` (${offen})`:"")],
+         ["todo","ToDo"],["buch","Hüsli-Buch"]]
+        .map(([id,l])=>`<button data-act="tab" data-id="${id}" class="${S.tab===id?"on":""}">${l}</button>`).join("")}
+    </nav>
+    ${S.error?`<div class="card" style="border-color:var(--rust)"><div class="warn">${esc(S.error)}</div></div>`:""}
+    ${ S.tab==="kalender" ? viewCalendar()
+     : S.tab==="neu"      ? viewNew()
+     : S.tab==="anfragen" ? viewRequests()
+     : S.tab==="todo"     ? viewTodos()
+     :                      viewLog() }
+    <footer>Alle vier Parteien sehen dieselben Einträge. Wer du bist, merkt sich nur dieses Gerät.</footer>`;
+}
+
+/* ---------- Anmelden ---------- */
+function viewLogin(){
+  return `<div class="center"><div style="width:100%;max-width:380px">
+    <div class="brand">Hüsli</div>
+    <p class="sub" style="margin:8px 0 20px">Wer bist du?</p>
+    ${PEOPLE.map(p=>`<button class="pick" data-act="pickme" data-id="${esc(p)}">
+        ${esc(p)}${p===OWNER?'<span style="float:right;font-size:12px;color:var(--mute)">Besitzerin</span>':""}
+      </button>`).join("")}
+    <div style="margin-top:18px">
+      <span class="label">Hüsli-Code</span>
+      <input id="code" type="password" placeholder="Der gemeinsame Code" value="${esc(S.code||"")}" style="margin-top:6px">
+      <p class="sub" style="margin-top:8px">Denselben Code benutzen alle vier. Er schützt die Seite vor Fremden.</p>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- Kalender ---------- */
+function dayInfo(d){
+  const list = S.res.filter(r=>r.status!=="abgelehnt" && r.from<=d && d<=r.to);
+  return {
+    list,
+    used: list.filter(r=>r.status==="bestätigt").reduce((s,r)=>s+bedSum(r.beds),0),
+    pend: list.filter(r=>r.status==="angefragt").reduce((s,r)=>s+bedSum(r.beds),0),
+    excl: list.some(r=>r.exclusive && r.status==="bestätigt"),
+  };
+}
+function viewCalendar(){
+  const {y,m,sel} = S.cal;
+  const offset = (new Date(y,m,1).getDay()+6)%7;
+  const n = new Date(y,m+1,0).getDate();
+  let cells = "";
+  for(let i=0;i<offset;i++) cells += "<div></div>";
+  for(let d=1;d<=n;d++){
+    const key = iso(new Date(y,m,d));
+    const inf = dayInfo(key);
+    const full = inf.used+inf.pend>=TOTAL || inf.excl;
+    cells += `<button class="day ${inf.used?"busy":""} ${key===sel?"sel":""} ${key===today()?"today":""}"
+      data-act="selday" data-id="${key}">
+      <span class="n">${d}</span>
+      ${full?'<span class="full">voll</span>':""}
+      <span class="beds">${Array.from({length:TOTAL}).map((_,i)=>
+        `<i class="${i<inf.used?"u":i<inf.used+inf.pend?"p":""}"></i>`).join("")}</span>
+    </button>`;
+  }
+  const inf = dayInfo(sel);
+  return `
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <button class="btn ghost small" data-act="mon" data-id="-1">←</button>
+      <div class="serif" style="font-size:22px">${MONTHS[m]} ${y}</div>
+      <button class="btn ghost small" data-act="mon" data-id="1">→</button>
+    </div>
+    <div class="cal">${WD.map(w=>`<div class="wd">${w}</div>`).join("")}</div>
+    <div class="cal" style="margin-top:4px">${cells}</div>
+    <div class="row sub" style="gap:16px;margin-top:10px">
+      <span><i style="display:inline-block;width:8px;height:8px;background:var(--pine);border-radius:2px;margin-right:6px"></i>bestätigt</span>
+      <span><i style="display:inline-block;width:8px;height:8px;background:var(--sun);border-radius:2px;margin-right:6px"></i>angefragt</span>
+      <span><i style="display:inline-block;width:8px;height:8px;background:var(--stone);border-radius:2px;margin-right:6px"></i>frei · ${TOTAL} Plätze pro Nacht</span>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <div class="row" style="justify-content:space-between">
+        <div class="serif" style="font-size:19px">${fmt(sel)}</div>
+        <div class="sub">${inf.used+inf.pend} von ${TOTAL} Plätzen</div>
+      </div>
+      ${inf.list.length ? `<div class="grid" style="margin-top:12px">${inf.list.map(r=>resCard(r,true)).join("")}</div>`
+        : `<p class="sub" style="margin:10px 0 0">Das Hüsli ist an diesem Tag frei.</p>`}
+    </div>`;
+}
+
+function resCard(r, compact, actions){
+  return `<div class="res ${r.status}">
+    <div class="row" style="justify-content:space-between">
+      <b>${esc(r.person)} · ${fmtS(r.from)} ${esc(r.fromTime||"")} – ${fmtS(r.to)} ${esc(r.toTime||"")}</b>
+      <span class="row" style="gap:6px">
+        ${r.exclusive?`<span class="chip" style="color:var(--lake)">allein</span>`:""}
+        <span class="chip" style="color:${r.status==="bestätigt"?"var(--pine)":r.status==="abgelehnt"?"var(--rust)":"var(--sun)"}">${esc(r.status)}</span>
+      </span>
+    </div>
+    <div class="sub" style="margin-top:4px">${r.guests.length} ${r.guests.length===1?"Person":"Personen"}: ${esc(r.guests.join(", "))}</div>
+    ${compact?"":`<div class="sub">${BEDS.filter(b=>Number(r.beds[b.id])>0).map(b=>`${b.label} (${r.beds[b.id]})`).join(" · ")}</div>`}
+    ${r.note?`<div style="font-size:14px;margin-top:6px">${esc(r.note)}</div>`:""}
+    ${actions||""}
+  </div>`;
+}
+
+/* ---------- Reservieren ---------- */
+function viewNew(){
+  if(S.sent){
+    const t = S.sent;
+    return `<div class="card">
+      <div class="serif" style="font-size:22px">Anfrage ist eingetragen</div>
+      <p class="sub" style="margin-top:8px">Marlys hat automatisch ein E-Mail bekommen und kann die Anfrage unter «Anfragen» bestätigen.</p>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" data-act="tab" data-id="kalender">Zum Kalender</button>
+        <button class="btn ghost" data-act="wa">Marlys zusätzlich per WhatsApp anstupsen</button>
+      </div>
+    </div>`;
+  }
+  if(!S.form) S.form = freshForm();
+  const f = S.form;
+  const clashes = S.res.filter(r=>r.status!=="abgelehnt" && overlaps(r,f));
+  const clashBeds = clashes.reduce((s,r)=>s+bedSum(r.beds),0);
+  const names = f.guests.map(g=>g.trim()).filter(Boolean);
+  const probs = [];
+  if(f.to < f.from) probs.push("Das Enddatum liegt vor dem Startdatum.");
+  if(!names.length) probs.push("Trag mindestens eine Person ein.");
+  if(bedSum(f.beds)===0) probs.push("Wähl aus, wo ihr schlaft.");
+  else if(bedSum(f.beds)!==names.length) probs.push(`Schlafplätze (${bedSum(f.beds)}) und Personen (${names.length}) stimmen nicht überein.`);
+  const warns = [];
+  if(clashes.some(r=>r.exclusive)) warns.push("In diesem Zeitraum möchte jemand allein im Hüsli sein.");
+  if(f.exclusive && clashes.length) warns.push("Du möchtest allein sein, es gibt aber schon andere Reservationen in diesem Zeitraum.");
+  if(clashBeds+bedSum(f.beds)>TOTAL) warns.push(`Zusammen wären das ${clashBeds+bedSum(f.beds)} Schlafplätze – es hat nur ${TOTAL}.`);
+
+  return `<div class="card grid">
+    <div class="cols2">
+      <label><span class="label">Ankunft</span>
+        <div class="row" style="margin-top:6px;flex-wrap:nowrap">
+          <input type="date" data-bind="from" value="${f.from}">
+          <input type="time" data-bind="fromTime" value="${f.fromTime}"></div></label>
+      <label><span class="label">Abreise</span>
+        <div class="row" style="margin-top:6px;flex-wrap:nowrap">
+          <input type="date" data-bind="to" min="${f.from}" value="${f.to}">
+          <input type="time" data-bind="toTime" value="${f.toTime}"></div></label>
+    </div>
+
+    <div><span class="label">Wer kommt mit</span>
+      <div class="grid" style="gap:8px;margin-top:6px">
+        ${f.guests.map((g,i)=>`<div class="row" style="flex-wrap:nowrap">
+          <input data-bind="guest" data-i="${i}" value="${esc(g)}" placeholder="Person ${i+1}">
+          <button class="btn ghost small" data-act="delguest" data-i="${i}" ${f.guests.length===1?"disabled":""}>✕</button>
+        </div>`).join("")}
+        <div><button class="btn ghost small" data-act="addguest" ${f.guests.length>=TOTAL?"disabled":""}>+ Person</button></div>
+      </div></div>
+
+    <div><span class="label">Wo schlaft ihr</span>
+      <div class="cols2" style="margin-top:6px;gap:8px">
+        ${BEDS.map(b=>`<div class="bedrow"><span style="font-size:14px">${b.label}</span>
+          <span class="row" style="flex-wrap:nowrap">
+            <button class="btn ghost small" data-act="bed" data-id="${b.id}" data-d="-1">−</button>
+            <b style="width:26px;text-align:center">${f.beds[b.id]}</b>
+            <button class="btn ghost small" data-act="bed" data-id="${b.id}" data-d="1">+</button>
+          </span></div>`).join("")}
+      </div>
+      <div class="sub" style="margin-top:6px">${bedSum(f.beds)} von ${TOTAL} Plätzen gewählt.</div></div>
+
+    <div><span class="label">Gesellschaft</span>
+      <div class="row" style="margin-top:6px">
+        <button class="btn ${f.exclusive?"ghost":""}" data-act="excl" data-id="0">Andere dürfen dazukommen</button>
+        <button class="btn ${f.exclusive?"":"ghost"}" data-act="excl" data-id="1">Wir möchten allein sein</button>
+      </div></div>
+
+    <label><span class="label">Bemerkung</span>
+      <textarea rows="2" data-bind="note" placeholder="Optional">${esc(f.note)}</textarea></label>
+
+    ${clashes.length?`<div style="background:var(--snow);border:1px solid var(--line);border-radius:10px;padding:12px">
+      <div class="label" style="margin-bottom:8px">Schon im Kalender</div>
+      <div class="grid" style="gap:8px">${clashes.map(r=>resCard(r,true)).join("")}</div></div>`:""}
+    ${warns.map(w=>`<div class="warn">⚠ ${esc(w)}</div>`).join("")}
+    ${probs.map(p=>`<div class="sub">${esc(p)}</div>`).join("")}
+
+    <div><button class="btn" data-act="send" ${probs.length?"disabled":""}>Anfrage an Marlys senden</button></div>
+  </div>`;
+}
+
+/* ---------- Anfragen ---------- */
+function viewRequests(){
+  const owner = S.me===OWNER;
+  const list = [...S.res].sort((a,b)=>a.from.localeCompare(b.from))
+    .filter(r=> S.filter==="offen"?r.status==="angefragt": S.filter==="alle"?true:r.status===S.filter);
+  return `
+    <div class="row" style="margin-bottom:14px">
+      ${["offen","bestätigt","abgelehnt","alle"].map(f=>
+        `<button class="btn small ${S.filter===f?"":"ghost"}" data-act="filter" data-id="${f}">${f}</button>`).join("")}
+    </div>
+    ${list.length?"":`<p class="sub">Hier ist gerade nichts.</p>`}
+    <div class="grid">${list.map(r=>resCard(r,false,`
+      <div class="row" style="margin-top:10px">
+        ${owner&&r.status!=="bestätigt"?`<button class="btn small" data-act="status" data-id="${r.id}" data-s="bestätigt">Bestätigen</button>`:""}
+        ${owner&&r.status!=="abgelehnt"?`<button class="btn small warn" data-act="status" data-id="${r.id}" data-s="abgelehnt">Ablehnen</button>`:""}
+        ${(owner||r.person===S.me)?`<button class="btn small ghost" data-act="delres" data-id="${r.id}">Löschen</button>`:""}
+      </div>`)).join("")}</div>`;
+}
+
+/* ---------- ToDo ---------- */
+function viewTodos(){
+  const row = (t)=>`<div class="row" style="flex-wrap:nowrap;align-items:flex-start;background:#fff;
+      border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+    <input type="checkbox" data-act="toggletodo" data-id="${t.id}" ${t.done?"checked":""}
+      style="width:18px;height:18px;margin-top:3px;accent-color:var(--pine)">
+    <div style="flex:1">
+      <div style="${t.done?"text-decoration:line-through;color:var(--mute)":""}">${esc(t.text)}</div>
+      <div class="sub" style="margin-top:2px">von ${esc(t.by)}${t.done&&t.doneBy?` · erledigt von ${esc(t.doneBy)}`:""}</div>
+    </div>
+    <button class="btn ghost small" data-act="deltodo" data-id="${t.id}">✕</button></div>`;
+  const open = S.todos.filter(t=>!t.done), done = S.todos.filter(t=>t.done);
+  return `
+    <div class="row" style="flex-wrap:nowrap;margin-bottom:16px">
+      <input data-bind="todoText" value="${esc(S.todoText)}" placeholder="Was muss gemacht werden?">
+      <button class="btn" data-act="addtodo">Hinzufügen</button>
+    </div>
+    <div class="grid" style="gap:8px">
+      ${open.length?open.map(row).join(""):`<p class="sub">Nichts offen. Schön.</p>`}
+    </div>
+    ${done.length?`<div class="label" style="margin:20px 0 8px">Erledigt</div>
+      <div class="grid" style="gap:8px">${done.map(row).join("")}</div>`:""}`;
+}
+
+/* ---------- Hüsli-Buch ---------- */
+function viewLog(){
+  const l = S.log;
+  const sorted = [...S.logs].sort((a,b)=> b.date.localeCompare(a.date) || String(b.at).localeCompare(String(a.at)));
+  return `
+    <div class="card grid">
+      <div class="cols2">
+        <label><span class="label">Datum</span><input type="date" data-bind="logdate" value="${l.date}"></label>
+        <label><span class="label">Titel</span><input data-bind="logtitle" value="${esc(l.title)}" placeholder="Gämse am Waldrand"></label>
+      </div>
+      <label><span class="label">Eintrag</span>
+        <textarea rows="3" data-bind="logtext" placeholder="Was war los im Hüsli?">${esc(l.text)}</textarea></label>
+      <div class="row">
+        <input type="file" accept="image/*" data-act="photo" style="border:none;padding:0;font-size:13px">
+        ${l.photo?`<img src="${l.photo}" alt="" style="height:52px;border-radius:8px;border:1px solid var(--line)">`:""}
+      </div>
+      <div><button class="btn" data-act="addlog">Eintragen</button></div>
+    </div>
+    ${sorted.length?"":`<p class="sub" style="margin-top:20px">Noch nichts im Buch. Der erste Eintrag wartet.</p>`}
+    <div class="grid" style="margin-top:16px">
+      ${sorted.map(e=>`<article class="log">
+        ${e.photoUrl?`<img src="${esc(e.photoUrl)}" alt="" loading="lazy">`:""}
+        <div class="body">
+          <div class="label">${fmt(e.date)} · ${esc(e.author)}</div>
+          ${e.title?`<div class="serif" style="font-size:20px;margin-top:4px">${esc(e.title)}</div>`:""}
+          ${e.text?`<p style="font-size:14px;margin:6px 0 0;white-space:pre-wrap">${esc(e.text)}</p>`:""}
+          ${e.author===S.me?`<div style="margin-top:12px"><button class="btn ghost small" data-act="dellog" data-id="${e.id}">Löschen</button></div>`:""}
+        </div></article>`).join("")}
+    </div>`;
+}
+
+/* ================================================================
+   Eingaben
+   ================================================================ */
+document.addEventListener("input", (ev)=>{
+  const el = ev.target, b = el.dataset.bind;
+  if(!b) return;
+  if(b==="guest"){ S.form.guests[Number(el.dataset.i)] = el.value; return; }
+  if(b==="todoText"){ S.todoText = el.value; return; }
+  if(b==="logdate"){ S.log.date = el.value; return; }
+  if(b==="logtitle"){ S.log.title = el.value; return; }
+  if(b==="logtext"){ S.log.text = el.value; return; }
+  if(S.form && b in S.form){
+    S.form[b] = el.value;
+    if(b==="from" && S.form.to < el.value) S.form.to = el.value;
+    if(b==="from"||b==="to") render();
+  }
+});
+document.addEventListener("keydown",(ev)=>{
+  if(ev.key!=="Enter") return;
+  if(ev.target.dataset.bind==="todoText") addTodo();
+  if(ev.target.id==="code") doLogin();
+});
+document.addEventListener("change", async (ev)=>{
+  if(ev.target.dataset.act!=="photo") return;
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  S.log.photo = await shrink(f);
+  render();
+});
+
+document.addEventListener("click", (ev)=>{
+  const el = ev.target.closest("[data-act]");
+  if(!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+
+  if(a==="pickme"){ S.me = id; localStorage.setItem("huesli.me", id); doLogin(); return; }
+  if(a==="logout"){ localStorage.removeItem("huesli.me"); S.me=null; render(); return; }
+  if(a==="tab"){ S.tab = id; if(id==="neu") S.sent=null; render(); return; }
+  if(a==="mon"){ const d=new Date(S.cal.y, S.cal.m+Number(id), 1); S.cal.y=d.getFullYear(); S.cal.m=d.getMonth(); render(); return; }
+  if(a==="selday"){ S.cal.sel = id; render(); return; }
+  if(a==="filter"){ S.filter = id; render(); return; }
+  if(a==="addguest"){ S.form.guests.push(""); render(); return; }
+  if(a==="delguest"){ S.form.guests.splice(Number(el.dataset.i),1); render(); return; }
+  if(a==="excl"){ S.form.exclusive = id==="1"; render(); return; }
+  if(a==="bed"){
+    const b = BEDS.find(x=>x.id===id);
+    S.form.beds[id] = Math.max(0, Math.min(b.max, S.form.beds[id] + Number(el.dataset.d)));
+    render(); return;
+  }
+  if(a==="send") return send();
+  if(a==="wa") return whatsapp();
+  if(a==="status") return guard(async()=>{
+    await call("setStatus",{ id, status: el.dataset.s }); await refresh();
+  }, "Gespeichert");
+  if(a==="delres") return guard(async()=>{ await call("deleteReservation",{id}); await refresh(); },"Gelöscht");
+  if(a==="addtodo") return addTodo();
+  if(a==="toggletodo") return guard(async()=>{ await call("toggleTodo",{id, by:S.me}); await refresh(); });
+  if(a==="deltodo") return guard(async()=>{ await call("deleteTodo",{id}); await refresh(); },"Gelöscht");
+  if(a==="addlog") return addLog();
+  if(a==="dellog") return guard(async()=>{ await call("deleteLog",{id}); await refresh(); },"Gelöscht");
+});
+
+/* ---------- Aktionen ---------- */
+async function doLogin(){
+  const inp = $("#code");
+  const code = inp ? inp.value.trim() : S.code;
+  if(!S.me){ toast("Wähl zuerst aus, wer du bist."); return; }
+  if(!code){ toast("Der Hüsli-Code fehlt."); return; }
+  S.code = code;
+  S.loading = true; render();
+  try{
+    await refresh();
+    localStorage.setItem("huesli.code", code);
+    S.error = null;
+  }catch(e){
+    S.code = null; S.error = e.message;
+    toast("Ging nicht: "+e.message);
+  }
+  S.loading = false; render();
+}
+
+async function send(){
+  const f = S.form;
+  const entry = { id: uid(), person: S.me, from:f.from, fromTime:f.fromTime, to:f.to, toTime:f.toTime,
+    guests: f.guests.map(g=>g.trim()).filter(Boolean), beds:f.beds, exclusive:f.exclusive,
+    note:f.note.trim(), status:"angefragt" };
+  await guard(async()=>{
+    await call("addReservation", entry);
+    await refresh();
+    S.sent = entry; S.form = null;
+  }, "Anfrage gesendet");
+}
+function whatsapp(){
+  const t = S.sent;
+  const msg = `Hallo Marlys, Reservationsanfrage fürs Hüsli: ${t.person}, ${fmt(t.from)} ${t.fromTime} bis ${fmt(t.to)} ${t.toTime}, `
+    + `${t.guests.length} Person(en): ${t.guests.join(", ")}. `
+    + (t.exclusive ? "Wir möchten gerne allein sein." : "Andere dürfen dazukommen.")
+    + (t.note ? " " + t.note : "");
+  window.open("https://wa.me/?text="+encodeURIComponent(msg), "_blank");
+}
+async function addTodo(){
+  const text = S.todoText.trim();
+  if(!text) return;
+  await guard(async()=>{
+    await call("addTodo",{ id:uid(), text, by:S.me });
+    S.todoText = ""; await refresh();
+  });
+}
+async function addLog(){
+  const l = S.log;
+  if(!l.title.trim() && !l.text.trim() && !l.photo){ toast("Der Eintrag ist noch leer."); return; }
+  toast("Wird gespeichert …");
+  await guard(async()=>{
+    await call("addLog",{ id:uid(), date:l.date, title:l.title.trim(), text:l.text.trim(),
+      author:S.me, photo:l.photo || "" });
+    S.log = { date: today(), title:"", text:"", photo:null };
+    await refresh();
+  }, "Im Buch eingetragen");
+}
+
+/* Foto verkleinern, damit es schnell hochlädt */
+function shrink(file, maxDim=1400, q=0.75){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const s = Math.min(1, maxDim/Math.max(img.width,img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL("image/jpeg", q));
+      };
+      img.onerror = rej; img.src = fr.result;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
