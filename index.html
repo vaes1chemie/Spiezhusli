@@ -4,11 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hüsli</title>
-<meta name="theme-color" content="#2E5D4F">
+<meta name="theme-color" content="#3D4A2E">
+<link rel="apple-touch-icon" href="bilder/huesli.jpg">
 <style>
   :root{
-    --ink:#1C2B2D; --pine:#2E5D4F; --lake:#3B6E9C; --sun:#D9A227;
-    --rust:#9E4B45; --snow:#F8F6F1; --stone:#E7E2D7; --line:#CFC9BC; --mute:#6B7770;
+    /* Farben ab den Fotos: verwittertes Holz, olivgrüne Fensterläden, Thunersee */
+    --ink:#2A2119;      /* dunkles Chaletholz */
+    --pine:#6F7F42;     /* Fensterladen-Grün */
+    --lake:#5E7E93;     /* Thunersee im Abendlicht */
+    --sun:#C98A2E;      /* Goldregen */
+    --rust:#9E4B45;
+    --snow:#F7F4ED;     /* Kalkwand */
+    --stone:#E4DECF;
+    --line:#D2C9B6;
+    --mute:#7A6E5D;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--snow);color:var(--ink);
@@ -70,6 +79,19 @@
   .center{min-height:70vh;display:flex;align-items:center;justify-content:center}
   .pick{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
     border-radius:12px;padding:14px 16px;font-size:16px;cursor:pointer;margin-bottom:8px;font-family:inherit;color:var(--ink)}
+  /* Bilder vom Hüsli */
+  .hero{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:18px}
+  .hero img{width:100%;display:block;object-fit:cover}
+  .hero.tall img{height:220px}
+  .hero.strip img{height:132px}
+  .hero .cap{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 10px;color:#fff;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    background:linear-gradient(to top,rgba(30,24,16,.72),rgba(30,24,16,0))}
+  .empty{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:18px}
+  .empty img{width:100%;height:200px;object-fit:cover;display:block;filter:saturate(.9)}
+  .empty .txt{position:absolute;inset:0;display:flex;align-items:flex-end;padding:16px;color:#fff;
+    background:linear-gradient(to top,rgba(30,24,16,.7),rgba(30,24,16,.05))}
+  .gast{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:8px}
   footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
   :focus-visible{outline:2px solid var(--lake);outline-offset:2px}
 </style>
@@ -85,8 +107,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyLc4YdUOUbVg6oAZVVs2DO
 
 /* ================================================================ */
 
-const PEOPLE = ["Marlys", "Bálint", "Béla", "Katalin"];
+const PEOPLE = ["Marlys", "Bálint", "Béla", "Katalin", "Gast"];
 const OWNER  = "Marlys";
+const BILD = { huesli:"bilder/huesli.jpg", aussicht:"bilder/aussicht.jpg", schaukel:"bilder/schaukel.jpg" };
 const BEDS = [
   { id:"unten",  label:"Unten, Schlafzimmer",        max:2 },
   { id:"obenSZ", label:"Oben, Schlafzimmer",         max:2 },
@@ -114,6 +137,7 @@ const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).sli
 /* ---------- Zustand ---------- */
 const S = {
   me: localStorage.getItem("huesli.me") || null,
+  guestName: localStorage.getItem("huesli.gast") || "",
   code: localStorage.getItem("huesli.code") || null,
   tab: "kalender",
   loading: true,
@@ -126,9 +150,14 @@ const S = {
   sent: null,
   filter: "offen",
 };
+/* Wie die Person in Einträgen erscheint. Gäste stehen unter ihrem eigenen Namen. */
+function ME(){
+  if(S.me !== "Gast") return S.me;
+  return S.guestName ? S.guestName.trim() + " (Gast)" : "Gast";
+}
 function freshForm(){
   return { from: today(), fromTime:"17:00", to: addDays(today(),2), toTime:"11:00",
-    guests:[S.me||""], beds:{unten:0,obenSZ:0,obenKZ:0,couch:0}, exclusive:false, note:"" };
+    guests:[(S.me==="Gast" ? S.guestName.trim() : S.me) || ""], beds:{unten:0,obenSZ:0,obenKZ:0,couch:0}, exclusive:false, note:"" };
 }
 
 /* ---------- Verbindung zur Google-Tabelle ---------- */
@@ -181,7 +210,7 @@ function render(){
         <div class="brand">Hüsli</div>
         <div class="eyebrow">Reservieren · Aufgaben · Hüsli-Buch</div>
       </div>
-      <button class="who" data-act="logout">${esc(S.me)}${S.me===OWNER?" · Besitzerin":""} ↔</button>
+      <button class="who" data-act="logout">${esc(ME())}${S.me===OWNER?" · Besitzerin":""} ↔</button>
     </header>
     <nav class="tabs">
       ${[["kalender","Kalender"],["neu","Reservieren"],["anfragen","Anfragen"+(offen?` (${offen})`:"")],
@@ -194,23 +223,36 @@ function render(){
      : S.tab==="anfragen" ? viewRequests()
      : S.tab==="todo"     ? viewTodos()
      :                      viewLog() }
-    <footer>Alle vier Parteien sehen dieselben Einträge. Wer du bist, merkt sich nur dieses Gerät.</footer>`;
+    <footer>Alle mit dem Hüsli-Code sehen dieselben Einträge. Bestätigen kann nur Marlys.
+      Wer du bist, merkt sich nur dieses Gerät.</footer>`;
 }
 
 /* ---------- Anmelden ---------- */
 function viewLogin(){
-  return `<div class="center"><div style="width:100%;max-width:380px">
+  const tag = (p)=> p===OWNER ? "Besitzerin" : p==="Gast" ? "mit Einladung" : "";
+  return `<div style="max-width:420px;margin:24px auto">
+    <div class="hero tall">
+      <img src="${BILD.huesli}" alt="Das Hüsli in Spiez" onerror="this.parentNode.remove()">
+      <div class="cap">Spiez am Thunersee</div>
+    </div>
     <div class="brand">Hüsli</div>
-    <p class="sub" style="margin:8px 0 20px">Wer bist du?</p>
-    ${PEOPLE.map(p=>`<button class="pick" data-act="pickme" data-id="${esc(p)}">
-        ${esc(p)}${p===OWNER?'<span style="float:right;font-size:12px;color:var(--mute)">Besitzerin</span>':""}
+    <p class="sub" style="margin:8px 0 18px">Wer bist du?</p>
+    ${PEOPLE.map(p=>`<button class="pick" data-act="pickme" data-id="${esc(p)}"
+        style="${S.me===p?"border-color:var(--pine);border-width:2px":""}">
+        ${esc(p)}${tag(p)?`<span style="float:right;font-size:12px;color:var(--mute)">${tag(p)}</span>`:""}
       </button>`).join("")}
+    ${S.me==="Gast" ? `<div class="gast">
+      <span class="label">Dein Name</span>
+      <input data-bind="guestName" value="${esc(S.guestName)}" placeholder="z. B. Familie Meier" style="margin-top:6px">
+      <p class="sub" style="margin:8px 0 0">Damit im Kalender steht, wer kommt.</p>
+    </div>` : ""}
     <div style="margin-top:18px">
       <span class="label">Hüsli-Code</span>
       <input id="code" type="password" placeholder="Der gemeinsame Code" value="${esc(S.code||"")}" style="margin-top:6px">
-      <p class="sub" style="margin-top:8px">Denselben Code benutzen alle vier. Er schützt die Seite vor Fremden.</p>
+      <p class="sub" style="margin-top:8px">Denselben Code benutzen alle. Er schützt die Seite vor Fremden.</p>
     </div>
-  </div></div>`;
+    <div style="margin-top:14px"><button class="btn" data-act="login">Hüsli öffnen</button></div>
+  </div>`;
 }
 
 /* ---------- Kalender ---------- */
@@ -243,6 +285,10 @@ function viewCalendar(){
   }
   const inf = dayInfo(sel);
   return `
+    <div class="hero strip">
+      <img src="${BILD.aussicht}" alt="Blick vom Hüsli auf den Thunersee" onerror="this.parentNode.remove()">
+      <div class="cap">Der Blick vom Garten</div>
+    </div>
     <div class="row" style="justify-content:space-between;margin-bottom:10px">
       <button class="btn ghost small" data-act="mon" data-id="-1">←</button>
       <div class="serif" style="font-size:22px">${MONTHS[m]} ${y}</div>
@@ -375,7 +421,7 @@ function viewRequests(){
       <div class="row" style="margin-top:10px">
         ${owner&&r.status!=="bestätigt"?`<button class="btn small" data-act="status" data-id="${r.id}" data-s="bestätigt">Bestätigen</button>`:""}
         ${owner&&r.status!=="abgelehnt"?`<button class="btn small warn" data-act="status" data-id="${r.id}" data-s="abgelehnt">Ablehnen</button>`:""}
-        ${(owner||r.person===S.me)?`<button class="btn small ghost" data-act="delres" data-id="${r.id}">Löschen</button>`:""}
+        ${(owner||r.person===ME())?`<button class="btn small ghost" data-act="delres" data-id="${r.id}">Löschen</button>`:""}
       </div>`)).join("")}</div>`;
 }
 
@@ -421,7 +467,12 @@ function viewLog(){
       </div>
       <div><button class="btn" data-act="addlog">Eintragen</button></div>
     </div>
-    ${sorted.length?"":`<p class="sub" style="margin-top:20px">Noch nichts im Buch. Der erste Eintrag wartet.</p>`}
+    ${sorted.length?"":`<div class="empty">
+      <img src="${BILD.schaukel}" alt="Die Hollywoodschaukel unter dem Goldregen" onerror="this.parentNode.remove()">
+      <div class="txt"><div>
+        <div class="serif" style="font-size:20px">Noch nichts im Buch</div>
+        <div style="font-size:13px;opacity:.9">Der erste Eintrag wartet.</div>
+      </div></div></div>`}
     <div class="grid" style="margin-top:16px">
       ${sorted.map(e=>`<article class="log">
         ${e.photoUrl?`<img src="${esc(e.photoUrl)}" alt="" loading="lazy">`:""}
@@ -429,7 +480,7 @@ function viewLog(){
           <div class="label">${fmt(e.date)} · ${esc(e.author)}</div>
           ${e.title?`<div class="serif" style="font-size:20px;margin-top:4px">${esc(e.title)}</div>`:""}
           ${e.text?`<p style="font-size:14px;margin:6px 0 0;white-space:pre-wrap">${esc(e.text)}</p>`:""}
-          ${e.author===S.me?`<div style="margin-top:12px"><button class="btn ghost small" data-act="dellog" data-id="${e.id}">Löschen</button></div>`:""}
+          ${(e.author===ME()||S.me===OWNER)?`<div style="margin-top:12px"><button class="btn ghost small" data-act="dellog" data-id="${e.id}">Löschen</button></div>`:""}
         </div></article>`).join("")}
     </div>`;
 }
@@ -441,6 +492,7 @@ document.addEventListener("input", (ev)=>{
   const el = ev.target, b = el.dataset.bind;
   if(!b) return;
   if(b==="guest"){ S.form.guests[Number(el.dataset.i)] = el.value; return; }
+  if(b==="guestName"){ S.guestName = el.value; return; }
   if(b==="todoText"){ S.todoText = el.value; return; }
   if(b==="logdate"){ S.log.date = el.value; return; }
   if(b==="logtitle"){ S.log.title = el.value; return; }
@@ -469,7 +521,12 @@ document.addEventListener("click", (ev)=>{
   if(!el) return;
   const a = el.dataset.act, id = el.dataset.id;
 
-  if(a==="pickme"){ S.me = id; localStorage.setItem("huesli.me", id); doLogin(); return; }
+  if(a==="pickme"){
+    S.me = id; localStorage.setItem("huesli.me", id);
+    if(id==="Gast" && !S.guestName){ render(); return; }   // zuerst den Namen
+    doLogin(); return;
+  }
+  if(a==="login") return doLogin();
   if(a==="logout"){ localStorage.removeItem("huesli.me"); S.me=null; render(); return; }
   if(a==="tab"){ S.tab = id; if(id==="neu") S.sent=null; render(); return; }
   if(a==="mon"){ const d=new Date(S.cal.y, S.cal.m+Number(id), 1); S.cal.y=d.getFullYear(); S.cal.m=d.getMonth(); render(); return; }
@@ -490,7 +547,7 @@ document.addEventListener("click", (ev)=>{
   }, "Gespeichert");
   if(a==="delres") return guard(async()=>{ await call("deleteReservation",{id}); await refresh(); },"Gelöscht");
   if(a==="addtodo") return addTodo();
-  if(a==="toggletodo") return guard(async()=>{ await call("toggleTodo",{id, by:S.me}); await refresh(); });
+  if(a==="toggletodo") return guard(async()=>{ await call("toggleTodo",{id, by:ME()}); await refresh(); });
   if(a==="deltodo") return guard(async()=>{ await call("deleteTodo",{id}); await refresh(); },"Gelöscht");
   if(a==="addlog") return addLog();
   if(a==="dellog") return guard(async()=>{ await call("deleteLog",{id}); await refresh(); },"Gelöscht");
@@ -501,7 +558,9 @@ async function doLogin(){
   const inp = $("#code");
   const code = inp ? inp.value.trim() : S.code;
   if(!S.me){ toast("Wähl zuerst aus, wer du bist."); return; }
+  if(S.me==="Gast" && !S.guestName.trim()){ toast("Trag bitte deinen Namen ein."); return; }
   if(!code){ toast("Der Hüsli-Code fehlt."); return; }
+  localStorage.setItem("huesli.gast", S.guestName.trim());
   S.code = code;
   S.loading = true; render();
   try{
@@ -517,7 +576,7 @@ async function doLogin(){
 
 async function send(){
   const f = S.form;
-  const entry = { id: uid(), person: S.me, from:f.from, fromTime:f.fromTime, to:f.to, toTime:f.toTime,
+  const entry = { id: uid(), person: ME(), from:f.from, fromTime:f.fromTime, to:f.to, toTime:f.toTime,
     guests: f.guests.map(g=>g.trim()).filter(Boolean), beds:f.beds, exclusive:f.exclusive,
     note:f.note.trim(), status:"angefragt" };
   await guard(async()=>{
@@ -538,7 +597,7 @@ async function addTodo(){
   const text = S.todoText.trim();
   if(!text) return;
   await guard(async()=>{
-    await call("addTodo",{ id:uid(), text, by:S.me });
+    await call("addTodo",{ id:uid(), text, by:ME() });
     S.todoText = ""; await refresh();
   });
 }
@@ -548,7 +607,7 @@ async function addLog(){
   toast("Wird gespeichert …");
   await guard(async()=>{
     await call("addLog",{ id:uid(), date:l.date, title:l.title.trim(), text:l.text.trim(),
-      author:S.me, photo:l.photo || "" });
+      author:ME(), photo:l.photo || "" });
     S.log = { date: today(), title:"", text:"", photo:null };
     await refresh();
   }, "Im Buch eingetragen");
