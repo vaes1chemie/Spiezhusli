@@ -79,6 +79,14 @@
   .center{min-height:70vh;display:flex;align-items:center;justify-content:center}
   .pick{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);
     border-radius:12px;padding:14px 16px;font-size:16px;cursor:pointer;margin-bottom:8px;font-family:inherit;color:var(--ink)}
+  /* Startseite: das Hüsli füllt den ganzen Hintergrund */
+  body.login{
+    background-image:linear-gradient(rgba(28,22,14,.35),rgba(28,22,14,.65)), url("bilder/huesli.jpg");
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+  }
+  body.login .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px}
+  .loginbox{width:100%;max-width:400px;background:rgba(247,244,237,.94);border-radius:18px;
+    padding:24px;box-shadow:0 20px 55px rgba(0,0,0,.4)}
   /* Bilder vom Hüsli */
   .hero{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:18px}
   .hero img{width:100%;display:block;object-fit:cover}
@@ -128,8 +136,9 @@ const iso = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 const fromIso = (s)=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
 const today = ()=>iso(new Date());
 const addDays=(s,n)=>{const d=fromIso(s);d.setDate(d.getDate()+n);return iso(d)};
-const fmt=(s)=>{if(!s)return"";const d=fromIso(s);return `${WD[(d.getDay()+6)%7]}, ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`};
-const fmtS=(s)=>{const d=fromIso(s);return `${d.getDate()}.${d.getMonth()+1}.`};
+const isDate=(s)=>/^\d{4}-\d{2}-\d{2}$/.test(s||"");
+const fmt=(s)=>{if(!isDate(s))return s?String(s):"ohne Datum";const d=fromIso(s);return `${WD[(d.getDay()+6)%7]}, ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`};
+const fmtS=(s)=>{if(!isDate(s))return s?String(s):"?";const d=fromIso(s);return `${d.getDate()}.${d.getMonth()+1}.`};
 const overlaps=(a,b)=>a.from<=b.to&&b.from<=a.to;
 const bedSum=(o)=>BEDS.reduce((s,b)=>s+(Number(o&&o[b.id])||0),0);
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
@@ -200,8 +209,10 @@ async function guard(fn, msg){
    ================================================================ */
 function render(){
   const app = $("#app");
+  const login = !S.loading && (!S.me || !S.code);
+  document.body.classList.toggle("login", login);
   if(S.loading){ app.innerHTML = `<div class="center sub">Hüsli wird aufgeschlossen …</div>`; return; }
-  if(!S.me || !S.code){ app.innerHTML = viewLogin(); return; }
+  if(login){ app.innerHTML = viewLogin(); return; }
 
   const offen = S.res.filter(r=>r.status==="angefragt").length;
   app.innerHTML = `
@@ -230,12 +241,8 @@ function render(){
 /* ---------- Anmelden ---------- */
 function viewLogin(){
   const tag = (p)=> p===OWNER ? "Besitzerin" : p==="Gast" ? "mit Einladung" : "";
-  return `<div style="max-width:420px;margin:24px auto">
-    <div class="hero tall">
-      <img src="${BILD.huesli}" alt="Das Hüsli in Spiez" onerror="this.parentNode.remove()">
-      <div class="cap">Spiez am Thunersee</div>
-    </div>
-    <div class="brand">Hüsli</div>
+  return `<div class="loginbox">
+    <div class="brand">Spiezhüsli</div>
     <p class="sub" style="margin:8px 0 18px">Wer bist du?</p>
     ${PEOPLE.map(p=>`<button class="pick" data-act="pickme" data-id="${esc(p)}"
         style="${S.me===p?"border-color:var(--pine);border-width:2px":""}">
